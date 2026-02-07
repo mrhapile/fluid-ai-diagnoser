@@ -1,0 +1,157 @@
+{
+  "summary": {
+    "clusterVersion": "v1.28.0",
+    "namespace": "fluid-system"
+  },
+  "graph": {
+    "nodes": {
+      "node-1": {
+        "name": "node-1",
+        "taints": [
+          {"key": "node.kubernetes.io/disk-pressure", "value": "", "effect": "NoSchedule"}
+        ],
+        "allocatable": {
+          "memory": "16Gi",
+          "cpu": "8"
+        },
+        "capacity": {
+          "memory": "16Gi",
+          "cpu": "8"
+        },
+        "unschedulable": false
+      }
+    },
+    "pods": {
+      "mydata-fuse-abc123": {
+        "name": "mydata-fuse-abc123",
+        "namespace": "default",
+        "status": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/1 nodes are available: 1 node(s) had taints that the pod didn't tolerate."
+          }
+        ],
+        "labels": {
+          "role": "fuse",
+          "fluid.io/fuse": "true"
+        },
+        "ownerReferences": [
+          {"kind": "DaemonSet", "name": "mydata-fuse"}
+        ]
+      },
+      "mydata-worker-0": {
+        "name": "mydata-worker-0",
+        "namespace": "default",
+        "status": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "False",
+            "reason": "Unschedulable",
+            "message": "0/1 nodes are available: 1 Insufficient memory."
+          }
+        ],
+        "labels": {
+          "role": "worker"
+        },
+        "ownerReferences": [
+          {"kind": "StatefulSet", "name": "mydata-worker"}
+        ]
+      }
+    },
+    "pvcs": {
+      "mydata": {
+        "name": "mydata",
+        "namespace": "default",
+        "status": "Pending"
+      }
+    },
+    "datasets": {
+      "mydata": {
+        "name": "mydata",
+        "namespace": "default",
+        "status": "NotBound",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "RuntimeNotReady",
+            "message": "The runtime is not ready."
+          }
+        ]
+      }
+    },
+    "runtimes": {
+      "mydata": {
+        "name": "mydata",
+        "namespace": "default",
+        "type": "Alluxio",
+        "masterReplicas": 1,
+        "workerReplicas": 2,
+        "masterReady": 1,
+        "workerReady": 0,
+        "phase": "NotReady",
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "WorkerNotReady",
+            "message": "Workers are not ready"
+          }
+        ],
+        "fusePhase": "NotReady",
+        "fuseReady": 0,
+        "fuseUnavailable": 1
+      }
+    }
+  },
+  "findings": [
+    {
+      "name": "fuse-scheduling-failure",
+      "message": "Fuse pod mydata-fuse-abc123 cannot be scheduled",
+      "source": "fuse-controller"
+    },
+    {
+      "name": "worker-memory-issue",
+      "message": "Worker pod mydata-worker-0 cannot be scheduled due to memory",
+      "source": "worker-controller"
+    }
+  ],
+  "events": [
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: 1 node(s) had taints that the pod didn't tolerate.",
+      "type": "Warning",
+      "count": 5,
+      "lastTimestamp": "2026-02-08T04:30:00Z",
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "default",
+        "name": "mydata-fuse-abc123"
+      }
+    },
+    {
+      "reason": "FailedScheduling",
+      "message": "0/1 nodes are available: 1 Insufficient memory.",
+      "type": "Warning",
+      "count": 3,
+      "lastTimestamp": "2026-02-08T04:31:00Z",
+      "involvedObject": {
+        "kind": "Pod",
+        "namespace": "default",
+        "name": "mydata-worker-0"
+      }
+    }
+  ],
+  "logs": {
+    "alluxio-master": "INFO AlluxioMaster started successfully\nINFO Waiting for workers to register",
+    "fluid-controller": "ERROR Worker pods not ready for dataset mydata"
+  },
+  "metadata": {
+    "creationTimestamp": "2026-02-08T04:35:00Z",
+    "collectorVersion": "v0.1.0"
+  }
+}
